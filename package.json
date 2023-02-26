@@ -1,7 +1,7 @@
 {
-  "name": "extension-ts-boilerplate",
+  "name": "ytme",
   "version": "0.0.1",
-  "description": "chrome-extension-typescript-boilerplate",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "build": "tsc --noEmit && vite build",
