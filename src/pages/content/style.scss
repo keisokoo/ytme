@@ -1,0 +1,62 @@
+body[ytme] {
+  --ytd-masthead-height: 0px !important;
+  --ytd-toolbar-height: 0px !important;
+  #page-manager.ytd-app {
+    margin-top: 0px;
+  }
+  ytd-watch-flexy[theater] #player-theater-container.ytd-watch-flexy,
+  ytd-watch-flexy[fullscreen] #player-theater-container.ytd-watch-flexy {
+    max-height: 100vh;
+    height: 100vh;
+    width: 100%;
+    video {
+      top: 0px !important;
+      left: 0px !important;
+      height: 100vh !important;
+      width: 100% !important;
+      object-fit: contain !important;
+    }
+  }
+  #masthead-container:not(.active) {
+    #page-manager.ytd-app {
+      margin-top: 0px;
+    }
+    #container.ytd-masthead,
+    #background.ytd-masthead {
+      transform: translateY(-100%);
+      transition: transform 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
+    }
+  }
+  #masthead-container:hover {
+    #container.ytd-masthead,
+    #background.ytd-masthead {
+      transform: translateY(0%);
+    }
+  }
+  .ytme-btn {
+    &.active {
+      path {
+        fill: red;
+      }
+      span {
+        color: red;
+      }
+    }
+  }
+  .ytme-text-btn {
+    & > * {
+      width: 100%;
+      height: 100%;
+      font-size: 18px;
+      font-weight: 700;
+      display: table;
+      text-align: center;
+      vertical-align: middle;
+    }
+  }
+}
+body[ytme-hide] {
+  .ytp-bezel-text-hide {
+    display: none !important;
+  }
+}

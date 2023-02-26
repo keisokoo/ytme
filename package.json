@@ -1,0 +1,36 @@
+{
+  "name": "extension-ts-boilerplate",
+  "version": "0.0.1",
+  "description": "chrome-extension-typescript-boilerplate",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "build:watch": "__DEV__=true vite build --watch",
+    "dev": "npm run build:hmr && (run-p wss build:watch)"
+  },
+  "author": "keisokoo",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.217",
+    "@types/node": "^18.14.1",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@types/ws": "^8.5.4",
+    "@vitejs/plugin-react": "^3.1.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "prettier": "^2.8.4",
+    "rollup": "^3.17.3",
+    "sass": "^1.58.3",
+    "ts-loader": "^9.4.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5",
+    "vite": "^4.1.4",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "ws": "^8.12.1"
+  }
+}
