@@ -1,5 +1,5 @@
-import "@pages/options/Options.css";
-import React from "react";
+import '@pages/options/Options.css'
+import React from 'react'
 
 const Options: React.FC = () => {
   return (
@@ -12,12 +12,12 @@ const Options: React.FC = () => {
           src="https://www.youtube.com/embed/o60M0I2LB8A"
           title="YTME - User's Guide"
           frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;"
           allowFullScreen
         ></iframe>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Options;
+export default Options
