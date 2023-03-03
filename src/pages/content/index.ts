@@ -1,5 +1,9 @@
 import DragZoom from '@src/DragAndZoom/DragZoom'
 
+let theaterTimeout: NodeJS.Timeout
+let mutationTimeout: NodeJS.Timeout
+let stepOne = false
+let stepTwo = false
 let dragZoom: DragZoom | null = null
 let pageCheckTimeout: NodeJS.Timeout
 let timeout: NodeJS.Timeout
@@ -10,9 +14,6 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const checkYoutubeId = (url?: string) => {
   const youtubeRegex = /(.*?)(^|\/|v=)([a-z0-9_-]{11})(.*)?/gim
   return youtubeRegex.test(url ?? window.location.href)
-}
-const checkHasVideoElement = () => {
-  return !!document.querySelector('video')
 }
 const addExpanderClass = () => {
   return document.body.setAttribute('ytme', '')
@@ -40,32 +41,12 @@ const rotateKeyBinding = (e: KeyboardEvent) => {
     document.body.setAttribute('ytme-degree', toggleDegrees(currentDegreeIndex))
   }
 }
-// const setRotateKeyBinding = async () => {
-//   await waitForVideo();
-//   window.addEventListener("keyup", rotateKeyBinding);
-// };
-
-// const removeRotateKeyBinding = async () => {
-//   window.removeEventListener("keyup", rotateKeyBinding);
-// };
-/**
- * Sets the quality
- * options are: "Highest" and the options available in the menu ("720p", "480p", etc.)
- */
 async function waitForVideo() {
   let video = document.querySelector('video')
   while (!video) {
     await sleep(300)
     video = document.querySelector('video')
   }
-}
-async function waitForPanel() {
-  let panels = document.querySelector('.ytp-panel-menu') as HTMLElement
-  while (!panels?.lastChild) {
-    await sleep(300)
-    panels = document.querySelector('.ytp-panel-menu')
-  }
-  return panels.lastChild as HTMLElement
 }
 const currentYoutubeQualities = [
   '4320p',
@@ -79,14 +60,6 @@ const currentYoutubeQualities = [
   '240p',
   '144p',
 ]
-async function waitForOptions() {
-  let options = document.querySelectorAll('.ytp-panel-menu > .ytp-menuitem')
-  while (!options) {
-    await sleep(300)
-    options = document.querySelectorAll('.ytp-panel-menu > .ytp-menuitem')
-  }
-  return [...options] as HTMLElement[]
-}
 function checkQuality(el: HTMLElement[]) {
   const qualityPRegex = /(^\d.*)p/g
   const notQualityRegex = /\((.*[0-9])p/g
@@ -100,7 +73,8 @@ function checkQuality(el: HTMLElement[]) {
   })
   return textList
 }
-async function setQuality(quality: string) {
+async function callHighQuality() {
+  stepOne = true
   const hqOn = localStorage.getItem('ytme-hq')
   if (hqOn !== 'true') return
   await waitForVideo()
@@ -108,49 +82,10 @@ async function setQuality(quality: string) {
     '.ytp-popup.ytp-settings-menu'
   ) as HTMLElement
   if (popupMenu) popupMenu.style.opacity = '0'
-  await sleep(300)
-
   let settingsButton = document.getElementsByClassName(
     'ytp-settings-button'
   )[0] as HTMLButtonElement
   settingsButton.click()
-  await sleep(500)
-  let qualityMenu = await waitForPanel()
-  qualityMenu.click()
-  await sleep(500)
-  let qualityOptions = await waitForOptions()
-  qualityOptions = checkQuality(qualityOptions)
-
-  let selection: HTMLElement
-  if (quality == 'Highest') selection = qualityOptions[0]
-  else
-    selection = qualityOptions.filter(
-      (el: HTMLButtonElement) => el?.innerText == quality
-    )[0]
-  if (!selection && selection?.innerText.includes('.25')) {
-    settingsButton.click()
-    await sleep(500)
-    setQuality(quality)
-    return
-  }
-
-  if (!selection) {
-    let qualityTexts = qualityOptions
-      .map((el: HTMLButtonElement) => el.innerText)
-      .join('\n')
-    console.log(
-      '"' + quality + '" not found. Options are: \n\nHighest\n' + qualityTexts
-    )
-    settingsButton.click() // click menu button to close
-    return
-  }
-
-  if (selection.attributes['aria-checked'] === undefined) {
-    // not checked
-    selection.click()
-  } else settingsButton.click() // click menu button to close
-
-  if (popupMenu) popupMenu.style.opacity = ''
 }
 function initPosition(observer?: MutationObserver) {
   observer?.disconnect()
@@ -221,13 +156,12 @@ const createButtons = () => {
   )
   checkToggle('ytme-hq', HighQualityButton)
   checkToggle('ytme-move', moveButton)
-  HighQualityButton.onclick = (e) => {
+  HighQualityButton.onclick = async (e) => {
     e.stopPropagation()
     const hqOn = localStorage.getItem('ytme-hq')
     if (!hqOn || hqOn === 'false') {
       localStorage.setItem('ytme-hq', 'true')
       HighQualityButton.classList.add('active')
-      setQuality('Highest')
     } else {
       localStorage.setItem('ytme-hq', 'false')
       HighQualityButton.classList.remove('active')
@@ -309,6 +243,7 @@ const ytmeInitial = async (
     parentElement.addEventListener('wheel', dragZoom.onWheel)
     createButtons()
   }
+  await callHighQuality()
 }
 const restoreBind = () => {
   if (dragZoom) {
@@ -322,6 +257,45 @@ const restoreBind = () => {
   removeButtons()
   removeExpanderClass()
 }
+
+async function clickQualityPanel() {
+  await sleep(100)
+  const panels = document.querySelector('.ytp-panel-menu')
+    ?.lastChild as HTMLElement
+  if (panels && stepOne) {
+    stepOne = false
+    stepTwo = true
+    panels.click()
+  } else {
+    let popupMenu = document.querySelector(
+      '.ytp-popup.ytp-settings-menu'
+    ) as HTMLElement
+    if (popupMenu) popupMenu.style.opacity = ''
+  }
+}
+async function clickHighQuality() {
+  await sleep(100)
+  let qualityOptions = [
+    ...document.querySelectorAll('.ytp-panel-menu > .ytp-menuitem'),
+  ] as HTMLElement[]
+
+  qualityOptions = checkQuality(qualityOptions)
+  let selection = qualityOptions[0]
+  if (selection?.attributes['aria-checked'] === undefined && stepTwo) {
+    stepTwo = false
+    selection.click()
+  } else {
+    stepTwo = false
+    let settingsButton = document.getElementsByClassName(
+      'ytp-settings-button'
+    )[0] as HTMLButtonElement
+    settingsButton.click()
+  }
+  let popupMenu = document.querySelector(
+    '.ytp-popup.ytp-settings-menu'
+  ) as HTMLElement
+  if (popupMenu) popupMenu.style.opacity = ''
+}
 function main() {
   const config = { attributes: true, childList: true, subtree: true }
   const target = document.body
@@ -331,6 +305,19 @@ function main() {
   // 감시자 인스턴스 만들기
   let observer = new MutationObserver(function (mutations, observer) {
     mutations.forEach(function (mutation) {
+      const mutationTarget = mutation.target as HTMLElement
+      if (mutationTarget.classList.contains('ytp-panel-menu') && stepOne) {
+        if (mutationTimeout) clearTimeout(mutationTimeout)
+        mutationTimeout = setTimeout(async () => {
+          await clickQualityPanel()
+        }, 300)
+      }
+      if (mutationTarget.classList.contains('ytp-panel-menu') && stepTwo) {
+        if (mutationTimeout) clearTimeout(mutationTimeout)
+        mutationTimeout = setTimeout(async () => {
+          await clickHighQuality()
+        }, 300)
+      }
       if (mutation.target.nodeName === 'YTD-APP') {
         if (pageCheckTimeout) {
           clearTimeout(pageCheckTimeout)
@@ -356,8 +343,7 @@ function main() {
           if (timeout) {
             clearTimeout(timeout)
           }
-          timeout = setTimeout(() => {
-            setQuality('Highest')
+          timeout = setTimeout(async () => {
             initPosition(observer)
             observer.observe(target, config)
           }, 600)
@@ -368,7 +354,10 @@ function main() {
         if (dom && dom.id === 'player-theater-container' && checkYoutubeId()) {
           if (mutation.addedNodes.length > 0) {
             if (mutation.previousSibling !== null) {
-              ytmeInitial(observer, target, config)
+              if (theaterTimeout) clearTimeout(theaterTimeout)
+              theaterTimeout = setTimeout(() => {
+                ytmeInitial(observer, target, config)
+              }, 300)
             }
           } else if (
             mutation.addedNodes.length === 0 &&
