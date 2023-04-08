@@ -9,7 +9,23 @@ let pageCheckTimeout: NodeJS.Timeout
 let timeout: NodeJS.Timeout
 let parentElement: HTMLElement | null = null
 let currentVideo: HTMLVideoElement | null = null
+let A_BY_B: {
+  A?: number
+  B?: number
+} = {}
+let RunA_BY_B: boolean = false
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+const toHHMMSS = (secondsTime: number) => {
+  if (!Number(secondsTime) || !secondsTime) return '00:00'
+  let sec_num = Number(secondsTime.toFixed(0))
+  let hours: number = Math.floor(sec_num / 3600)
+  let minutes: number = Math.floor((sec_num - hours * 3600) / 60)
+  let seconds: number = sec_num - hours * 3600 - minutes * 60
+  return `${hours ? String(hours).padStart(2, '0') + ':' : ''}${String(
+    minutes
+  ).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
 
 const checkYoutubeId = (url?: string) => {
   const youtubeRegex = /(.*?)(^|\/|v=)([a-z0-9_-]{11})(.*)?/gim
@@ -125,8 +141,7 @@ const createSVG = (d: string, appendClass?: string) => {
   const createdButton = document.createElement('button')
   createdButton.classList.add('ytp-button')
   createdButton.classList.add('ytme-btn')
-  if(appendClass)
-    createdButton.classList.add(appendClass)
+  if (appendClass) createdButton.classList.add(appendClass)
   buttonSVG.appendChild(buttonPath)
   createdButton.appendChild(buttonSVG)
   return createdButton
@@ -139,41 +154,105 @@ const checkToggle = (storageName: string, el: HTMLElement) => {
     el.classList.remove('active')
   }
 }
+const checkA_BY_B = () => {
+  return (
+    typeof A_BY_B?.A === 'number' &&
+    typeof A_BY_B?.B === 'number' &&
+    A_BY_B.A < A_BY_B.B
+  )
+}
+const onTimeUpdate = (e: Event) => {
+  const videoElement = e.currentTarget as HTMLVideoElement
+  if (!RunA_BY_B) return
+  if (typeof A_BY_B.A === 'number' && typeof A_BY_B.B === 'number') {
+    if (videoElement.currentTime < A_BY_B.A) {
+      videoElement.pause()
+      videoElement.currentTime = A_BY_B.A
+      videoElement.play()
+    } else if (videoElement.currentTime > A_BY_B.B) {
+      videoElement.pause()
+      videoElement.currentTime = A_BY_B.A
+      videoElement.play()
+    }
+  }
+}
 const optionEvents = (e: Event) => {
-e.stopPropagation()
-const eventTarget = e.target as HTMLElement
-if(!eventTarget) return
-const dataValue = eventTarget.getAttribute('data-value')
-if(!dataValue) return
-if(dataValue === 'rotate'){
-  dragZoom.ts = dragZoom.getPosition()
-  dragZoom.ts = {
-    ...dragZoom.ts,
-    rotate: dragZoom.toggleRotation(dragZoom.ts.rotate),
+  const lastTarget = e.target as HTMLElement
+  if (lastTarget.classList.contains('ytme-inner-btn')) {
+    e.stopPropagation()
+    const video = document.querySelector('video')
+    if (!video) return
+    const isA = lastTarget.classList.contains('ytme-a')
+    const isB = lastTarget.classList.contains('ytme-b')
+    const isToggle = lastTarget.classList.contains('ytme-toggle-a-b')
+    if (isA) {
+      if (!A_BY_B.A) {
+        if (A_BY_B.B && video.currentTime > A_BY_B.B) return
+        A_BY_B.A = video.currentTime
+        lastTarget.innerText = `A: ${toHHMMSS(A_BY_B.A)}`
+      } else {
+        A_BY_B.A = undefined
+        lastTarget.innerText = `A`
+      }
+    }
+    if (isB) {
+      if (!A_BY_B.B) {
+        if (A_BY_B.A && video.currentTime < A_BY_B.A) return
+        A_BY_B.B = video.currentTime
+        lastTarget.innerText = `B: ${toHHMMSS(A_BY_B.B)}`
+      } else {
+        A_BY_B.B = undefined
+        lastTarget.innerText = `B`
+      }
+    }
+    if (isToggle) {
+      if (checkA_BY_B()) {
+        RunA_BY_B = !RunA_BY_B
+        lastTarget.innerText = RunA_BY_B ? 'on' : 'off'
+      } else {
+        RunA_BY_B = false
+      }
+      if (RunA_BY_B) {
+        video.addEventListener('timeupdate', onTimeUpdate)
+      } else {
+        video.removeEventListener('timeupdate', onTimeUpdate)
+      }
+    }
   }
-  eventTarget.innerText = `Rotate: ${dragZoom.ts.rotate + '°'}`
-  dragZoom.setTransform()
-}
-if(dataValue === 'hq'){
-  const hqOn = localStorage.getItem('ytme-hq')
-  if (!hqOn || hqOn === 'false') {
-    localStorage.setItem('ytme-hq', 'true')
-    eventTarget.classList.add('active')
-  } else {
-    localStorage.setItem('ytme-hq', 'false')
-    eventTarget.classList.remove('active')
+  e.stopPropagation()
+  const eventTarget = e.target as HTMLElement
+  if (!eventTarget) return
+  const dataValue = eventTarget.getAttribute('data-value')
+  if (!dataValue) return
+  if (dataValue === 'rotate') {
+    dragZoom.ts = dragZoom.getPosition()
+    dragZoom.ts = {
+      ...dragZoom.ts,
+      rotate: dragZoom.toggleRotation(dragZoom.ts.rotate),
+    }
+    eventTarget.innerText = `Rotate: ${dragZoom.ts.rotate + '°'}`
+    dragZoom.setTransform()
   }
-}
-if(dataValue === 'transform'){
-  const moveOn = localStorage.getItem('ytme-move')
-  if (!moveOn || moveOn === 'false') {
-    localStorage.setItem('ytme-move', 'true')
-    eventTarget.classList.add('active')
-  } else {
-    localStorage.setItem('ytme-move', 'false')
-    eventTarget.classList.remove('active')
+  if (dataValue === 'hq') {
+    const hqOn = localStorage.getItem('ytme-hq')
+    if (!hqOn || hqOn === 'false') {
+      localStorage.setItem('ytme-hq', 'true')
+      eventTarget.classList.add('active')
+    } else {
+      localStorage.setItem('ytme-hq', 'false')
+      eventTarget.classList.remove('active')
+    }
   }
-}
+  if (dataValue === 'transform') {
+    const moveOn = localStorage.getItem('ytme-move')
+    if (!moveOn || moveOn === 'false') {
+      localStorage.setItem('ytme-move', 'true')
+      eventTarget.classList.add('active')
+    } else {
+      localStorage.setItem('ytme-move', 'false')
+      eventTarget.classList.remove('active')
+    }
+  }
 }
 const createOptions = () => {
   const optionsEl = document.createElement('div')
@@ -183,9 +262,16 @@ const createOptions = () => {
   const qualityOn = localStorage.getItem('ytme-hq') === 'true'
   optionsEl.innerHTML = `
   <div class="option-nav">
-  <div class="option-item" data-value="rotate">Rotate: ${dragZoom.ts.rotate + '°'}</div>
-  <div class="option-item${moveOn? ' active': ''}" data-value="transform">Transform<div class="ytme-ball"></div></div>
-  <div class="option-item${qualityOn? ' active': ''}" data-value="hq">Force High Quality<div class="ytme-ball"></div></div>
+  <div class="option-item noPadding" data-value="a-b"><div onclick="window.lastEvent" class="ytme-a ytme-inner-btn">A</div><div class="ytme-b ytme-inner-btn">B</div><div class="ytme-toggle-a-b ytme-inner-btn">on/off</div></div>
+  <div class="option-item" data-value="rotate">Rotate: ${
+    dragZoom.ts.rotate + '°'
+  }</div>
+  <div class="option-item${
+    moveOn ? ' active' : ''
+  }" data-value="transform">Transform<div class="ytme-ball"></div></div>
+  <div class="option-item${
+    qualityOn ? ' active' : ''
+  }" data-value="hq">Force High Quality<div class="ytme-ball"></div></div>
     </div>
   `
   return optionsEl
@@ -202,10 +288,10 @@ const createButtons = () => {
   const hasTransformed = dragZoom.hasTransformed()
   checkToggle('ytme-options', optionsBtn)
   optionsBtn.onclick = (e) => {
-    if(optionsBtn.querySelector('.ytme-option-list')){
+    if (optionsBtn.querySelector('.ytme-option-list')) {
       optionsBtn.classList.remove('active')
       optionsBtn.querySelector('.ytme-option-list').remove()
-    }else{
+    } else {
       optionsBtn.classList.add('active')
       const optionsEL = createOptions()
       const controlbar = document.querySelector('.ytp-chrome-controls')
@@ -213,12 +299,11 @@ const createButtons = () => {
       const btnRect = optionsBtn.getBoundingClientRect()
       optionsEL.style.left = btnRect.left + 'px'
       const optionChilds = [...optionsEL.children]
-      optionChilds.forEach((el)=>el.addEventListener('click', optionEvents))
+      optionChilds.forEach((el) => el.addEventListener('click', optionEvents))
       optionsBtn.prepend(optionsEL)
     }
   }
-  console.log('hasTransformed1', hasTransformed)
-  if(hasTransformed){
+  if (hasTransformed) {
     restoreButton.classList.add('hide')
   }
   restoreButton.onclick = (e) => {
@@ -265,12 +350,10 @@ const ytmeInitial = async (
       after: () => {
         const hasTransformed = dragZoom.hasTransformed()
         const restoreBtn = document.querySelector('.ytme-restore')
-        console.log('hasTransformed', hasTransformed)
-        console.log('restoreBtn', restoreBtn)
-        if(hasTransformed){
-          if(restoreBtn) restoreBtn.classList.remove('hide')
-        }else{
-          if(restoreBtn) restoreBtn.classList.add('hide')
+        if (hasTransformed) {
+          if (restoreBtn) restoreBtn.classList.remove('hide')
+        } else {
+          if (restoreBtn) restoreBtn.classList.add('hide')
         }
         observer.observe(target, config)
       },
@@ -282,7 +365,7 @@ const ytmeInitial = async (
     parentElement.addEventListener('wheel', dragZoom.onWheel)
     createButtons()
   }
-  if (!stepOne) {
+  if (!stepOne && localStorage.getItem('ytme-hq') === 'true') {
     await callHighQuality()
   }
 }
@@ -303,12 +386,13 @@ async function clickQualityPanel() {
   await sleep(100)
   const panels = document.querySelector('.ytp-panel-menu')
     ?.lastChild as HTMLElement
-
   if (panels && stepOne) {
     stepOne = false
     stepTwo = true
+    await sleep(300)
     panels.click()
   } else {
+    stepOne = false
     let popupMenu = document.querySelector(
       '.ytp-popup.ytp-settings-menu'
     ) as HTMLElement
@@ -319,8 +403,8 @@ function checkAttributes(target: Element, attr: string) {
   return target.hasAttribute(attr)
 }
 async function clickHighQuality() {
-  stepTwo = false
   await sleep(100)
+  stepTwo = false
   let qualityOptions = [
     ...document.querySelectorAll('.ytp-panel-menu > .ytp-menuitem'),
   ] as HTMLElement[]
@@ -346,7 +430,7 @@ function main() {
 
   // 감시자 인스턴스 만들기
   let observer = new MutationObserver(function (mutations, observer) {
-    mutations.forEach(function (mutation) {
+    mutations.forEach(async function (mutation) {
       const mutationTarget = mutation.target as HTMLElement
       if (mutationTarget.classList.contains('ytp-panel-menu') && stepOne) {
         if (mutationTimeout) clearTimeout(mutationTimeout)
@@ -372,11 +456,14 @@ function main() {
         const isHidden = () => checkAttributes(el, 'hidden')
         const isMain = () =>
           el.hasAttribute('role') && el.getAttribute('role') === 'main'
-          if(mutation.attributeName === 'video-id' && el.getAttribute('video-id')){
-            if (!stepOne) {
-            callHighQuality()
-            }
-          }  
+        if (
+          mutation.attributeName === 'video-id' &&
+          el.getAttribute('video-id')
+        ) {
+          if (!stepOne && localStorage.getItem('ytme-hq') === 'true') {
+            await callHighQuality()
+          }
+        }
         if (
           mutation.attributeName === 'hidden' ||
           mutation.attributeName === 'role'

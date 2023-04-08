@@ -42,7 +42,7 @@ body[ytme] {
         color: red;
       }
     }
-    &.hide{
+    &.hide {
       display: none;
     }
   }
@@ -56,7 +56,7 @@ body[ytme] {
       text-align: center;
       vertical-align: middle;
     }
-    .ytme-option-list{
+    .ytme-option-list {
       position: absolute;
       overflow: hidden;
       background-color: #ffffffb0;
@@ -65,25 +65,51 @@ body[ytme] {
       height: auto;
       border-radius: 8px;
       margin-bottom: auto;
-      .option-item{
+      .option-item {
         padding: 0px 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 24px;
-        .ytme-ball{
+        &.noPadding {
+          padding: 0px;
+          gap: 0px;
+        }
+        .ytme-ball {
           width: 8px;
           height: 8px;
           border-radius: 50%;
           background-color: #6e6e6ecf;
         }
-        &:hover{
+        .ytme-inner-btn {
+          &.ytme-toggle-a-b {
+            width: 40px;
+            min-width: 40px;
+            flex: initial;
+          }
+          height: 24px;
+          padding: 0 8px;
+          font-size: 10px;
+          min-width: 60px;
+          text-transform: uppercase;
+          white-space: nowrap;
+          flex: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          &:hover {
+            color: #ad0000cf;
+            background-color: #fff;
+          }
+        }
+        &:hover:not(.noPadding) {
           color: #ad0000cf;
           background-color: #fff;
         }
-        &.active{
+        &.active {
           color: #ad0000cf;
-          .ytme-ball{
+          .ytme-ball {
             background-color: #ad0000cf;
           }
         }
