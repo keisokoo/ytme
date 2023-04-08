@@ -20,6 +20,12 @@ class DragZoom extends Drag {
       this.setTransform();
     }
   };
+  hasTransformed = () => {
+    if(this.ts.rotate !== 0 || this.ts.scale !== 1 || this.ts.translate.x !== 0 || this.ts.translate.y !== 0){
+      return true
+    }
+    return false
+  }
   restore = () => {
     this.ts = {
       rotate: 0,

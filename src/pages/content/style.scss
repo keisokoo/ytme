@@ -42,16 +42,52 @@ body[ytme] {
         color: red;
       }
     }
+    &.hide{
+      display: none;
+    }
   }
   .ytme-text-btn {
-    & > * {
+    & > *:not(.ytme-option-list) {
       width: 100%;
       height: 100%;
-      font-size: 18px;
+      font-size: 12px;
       font-weight: 700;
       display: table;
       text-align: center;
       vertical-align: middle;
+    }
+    .ytme-option-list{
+      position: absolute;
+      overflow: hidden;
+      background-color: #ffffffb0;
+      color: #000;
+      width: auto;
+      height: auto;
+      border-radius: 8px;
+      margin-bottom: auto;
+      .option-item{
+        padding: 0px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        .ytme-ball{
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: #6e6e6ecf;
+        }
+        &:hover{
+          color: #ad0000cf;
+          background-color: #fff;
+        }
+        &.active{
+          color: #ad0000cf;
+          .ytme-ball{
+            background-color: #ad0000cf;
+          }
+        }
+      }
     }
   }
 }

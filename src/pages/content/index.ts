@@ -107,7 +107,7 @@ const createTextButton = (text: string) => {
     span: textSpan,
   }
 }
-const createSVG = (d: string) => {
+const createSVG = (d: string, appendClass?: string) => {
   const buttonSVG = document.createElementNS(
     'http://www.w3.org/2000/svg',
     'svg'
@@ -125,6 +125,8 @@ const createSVG = (d: string) => {
   const createdButton = document.createElement('button')
   createdButton.classList.add('ytp-button')
   createdButton.classList.add('ytme-btn')
+  if(appendClass)
+    createdButton.classList.add(appendClass)
   buttonSVG.appendChild(buttonPath)
   createdButton.appendChild(buttonSVG)
   return createdButton
@@ -137,63 +139,94 @@ const checkToggle = (storageName: string, el: HTMLElement) => {
     el.classList.remove('active')
   }
 }
+const optionEvents = (e: Event) => {
+e.stopPropagation()
+const eventTarget = e.target as HTMLElement
+if(!eventTarget) return
+const dataValue = eventTarget.getAttribute('data-value')
+if(!dataValue) return
+if(dataValue === 'rotate'){
+  dragZoom.ts = dragZoom.getPosition()
+  dragZoom.ts = {
+    ...dragZoom.ts,
+    rotate: dragZoom.toggleRotation(dragZoom.ts.rotate),
+  }
+  eventTarget.innerText = `Rotate: ${dragZoom.ts.rotate + '°'}`
+  dragZoom.setTransform()
+}
+if(dataValue === 'hq'){
+  const hqOn = localStorage.getItem('ytme-hq')
+  if (!hqOn || hqOn === 'false') {
+    localStorage.setItem('ytme-hq', 'true')
+    eventTarget.classList.add('active')
+  } else {
+    localStorage.setItem('ytme-hq', 'false')
+    eventTarget.classList.remove('active')
+  }
+}
+if(dataValue === 'transform'){
+  const moveOn = localStorage.getItem('ytme-move')
+  if (!moveOn || moveOn === 'false') {
+    localStorage.setItem('ytme-move', 'true')
+    eventTarget.classList.add('active')
+  } else {
+    localStorage.setItem('ytme-move', 'false')
+    eventTarget.classList.remove('active')
+  }
+}
+}
+const createOptions = () => {
+  const optionsEl = document.createElement('div')
+  optionsEl.classList.add('ytme-option-list')
+  dragZoom.ts = dragZoom.getPosition()
+  const moveOn = localStorage.getItem('ytme-move') === 'true'
+  const qualityOn = localStorage.getItem('ytme-hq') === 'true'
+  optionsEl.innerHTML = `
+  <div class="option-nav">
+  <div class="option-item" data-value="rotate">Rotate: ${dragZoom.ts.rotate + '°'}</div>
+  <div class="option-item${moveOn? ' active': ''}" data-value="transform">Transform<div class="ytme-ball"></div></div>
+  <div class="option-item${qualityOn? ' active': ''}" data-value="hq">Force High Quality<div class="ytme-ball"></div></div>
+    </div>
+  `
+  return optionsEl
+}
 const createButtons = () => {
   removeButtons()
   if (!dragZoom) return
   const restoreButton = createSVG(
-    'M20.673,16.932l4.276,-0c0.445,-0 0.802,-0.358 0.802,-0.803l0,-4.275c0,-0.325 -0.193,-0.619 -0.494,-0.742c-0.301,-0.124 -0.645,-0.058 -0.876,0.174l-1.389,1.389c-2.927,-2.889 -7.641,-2.879 -10.551,0.033c-2.922,2.924 -2.922,7.661 0,10.584c2.924,2.923 7.661,2.923 10.584,-0c0.417,-0.418 0.417,-1.096 -0,-1.514c-0.418,-0.417 -1.096,-0.417 -1.513,0c-2.088,2.088 -5.473,2.088 -7.561,0c-2.087,-2.088 -2.087,-5.472 0,-7.56c2.078,-2.078 5.436,-2.088 7.527,-0.033l-1.373,1.376c-0.231,0.231 -0.297,0.575 -0.173,0.876c0.123,0.301 0.417,0.495 0.741,0.495Z'
-  )
-  const moveButton = createSVG(
-    'M18.707,10.339c-0.391,-0.391 -1.026,-0.391 -1.417,0l-2,2.001c-0.288,0.287 -0.372,0.716 -0.216,1.091c0.156,0.375 0.519,0.619 0.925,0.619l1.001,-0l-0,3.001l-3.002,0l0,-1.003c0,-0.404 -0.243,-0.769 -0.619,-0.926c-0.375,-0.156 -0.803,-0.069 -1.091,0.216l-2.001,2.001c-0.39,0.391 -0.39,1.025 0,1.416l2.001,2.001c0.288,0.287 0.716,0.372 1.091,0.215c0.376,-0.156 0.619,-0.518 0.619,-0.925l0,-0.997l3.002,-0l-0,3.001l-1.001,0c-0.403,0 -0.769,0.244 -0.925,0.619c-0.156,0.375 -0.069,0.804 0.216,1.091l2,2.001c0.391,0.391 1.026,0.391 1.417,-0l2,-2.001c0.288,-0.287 0.372,-0.716 0.216,-1.091c-0.156,-0.375 -0.519,-0.619 -0.925,-0.619l-0.998,0l0,-3.001l3.002,-0l-0,1c-0,0.404 0.243,0.769 0.619,0.926c0.375,0.156 0.803,0.068 1.091,-0.216l2.001,-2.001c0.39,-0.391 0.39,-1.025 -0,-1.416l-2.001,-2.001c-0.288,-0.288 -0.716,-0.372 -1.091,-0.216c-0.376,0.157 -0.619,0.519 -0.619,0.926l-0,1l-3.002,0l0,-3.004l1.001,-0c0.403,-0 0.769,-0.244 0.925,-0.619c0.156,-0.375 0.069,-0.804 -0.216,-1.091l-2,-2.001l-0.003,0.003Z'
+    'M20.673,16.932l4.276,-0c0.445,-0 0.802,-0.358 0.802,-0.803l0,-4.275c0,-0.325 -0.193,-0.619 -0.494,-0.742c-0.301,-0.124 -0.645,-0.058 -0.876,0.174l-1.389,1.389c-2.927,-2.889 -7.641,-2.879 -10.551,0.033c-2.922,2.924 -2.922,7.661 0,10.584c2.924,2.923 7.661,2.923 10.584,-0c0.417,-0.418 0.417,-1.096 -0,-1.514c-0.418,-0.417 -1.096,-0.417 -1.513,0c-2.088,2.088 -5.473,2.088 -7.561,0c-2.087,-2.088 -2.087,-5.472 0,-7.56c2.078,-2.078 5.436,-2.088 7.527,-0.033l-1.373,1.376c-0.231,0.231 -0.297,0.575 -0.173,0.876c0.123,0.301 0.417,0.495 0.741,0.495Z',
+    'ytme-restore'
   )
   dragZoom.ts = dragZoom.getPosition()
-  const { button: HighQualityButton } = createTextButton('HQ')
-  const { button: rotateButton, span: rotateDiv } = createTextButton(
-    dragZoom.ts.rotate + '°'
-  )
-  checkToggle('ytme-hq', HighQualityButton)
-  checkToggle('ytme-move', moveButton)
-  HighQualityButton.onclick = async (e) => {
-    e.stopPropagation()
-    const hqOn = localStorage.getItem('ytme-hq')
-    if (!hqOn || hqOn === 'false') {
-      localStorage.setItem('ytme-hq', 'true')
-      HighQualityButton.classList.add('active')
-    } else {
-      localStorage.setItem('ytme-hq', 'false')
-      HighQualityButton.classList.remove('active')
+  const { button: optionsBtn } = createTextButton('YT')
+  const hasTransformed = dragZoom.hasTransformed()
+  checkToggle('ytme-options', optionsBtn)
+  optionsBtn.onclick = (e) => {
+    if(optionsBtn.querySelector('.ytme-option-list')){
+      optionsBtn.classList.remove('active')
+      optionsBtn.querySelector('.ytme-option-list').remove()
+    }else{
+      optionsBtn.classList.add('active')
+      const optionsEL = createOptions()
+      const controlbar = document.querySelector('.ytp-chrome-controls')
+      optionsEL.style.bottom = controlbar.clientHeight + 'px'
+      const btnRect = optionsBtn.getBoundingClientRect()
+      optionsEL.style.left = btnRect.left + 'px'
+      const optionChilds = [...optionsEL.children]
+      optionChilds.forEach((el)=>el.addEventListener('click', optionEvents))
+      optionsBtn.prepend(optionsEL)
     }
   }
-  rotateButton.onclick = (e) => {
-    e.stopPropagation()
-    dragZoom.ts = dragZoom.getPosition()
-    dragZoom.ts = {
-      ...dragZoom.ts,
-      rotate: dragZoom.toggleRotation(dragZoom.ts.rotate),
-    }
-    rotateDiv.innerText = dragZoom.ts.rotate + '°'
-    dragZoom.setTransform()
+  console.log('hasTransformed1', hasTransformed)
+  if(hasTransformed){
+    restoreButton.classList.add('hide')
   }
   restoreButton.onclick = (e) => {
     e.stopPropagation()
-    rotateDiv.innerText = 0 + '°'
     dragZoom.restore()
   }
 
-  moveButton.onclick = (e) => {
-    e.stopPropagation()
-    const moveOn = localStorage.getItem('ytme-move')
-    if (!moveOn || moveOn === 'false') {
-      localStorage.setItem('ytme-move', 'true')
-      moveButton.classList.add('active')
-    } else {
-      localStorage.setItem('ytme-move', 'false')
-      moveButton.classList.remove('active')
-    }
-  }
-  document.querySelector('.ytp-right-controls').prepend(HighQualityButton)
-  document.querySelector('.ytp-right-controls').prepend(rotateButton)
-  document.querySelector('.ytp-right-controls').prepend(moveButton)
+  document.querySelector('.ytp-right-controls').prepend(optionsBtn)
   document.querySelector('.ytp-right-controls').prepend(restoreButton)
 }
 const addActiveHeader = () => {
@@ -230,6 +263,15 @@ const ytmeInitial = async (
         observer.disconnect()
       },
       after: () => {
+        const hasTransformed = dragZoom.hasTransformed()
+        const restoreBtn = document.querySelector('.ytme-restore')
+        console.log('hasTransformed', hasTransformed)
+        console.log('restoreBtn', restoreBtn)
+        if(hasTransformed){
+          if(restoreBtn) restoreBtn.classList.remove('hide')
+        }else{
+          if(restoreBtn) restoreBtn.classList.add('hide')
+        }
         observer.observe(target, config)
       },
     })
@@ -330,6 +372,11 @@ function main() {
         const isHidden = () => checkAttributes(el, 'hidden')
         const isMain = () =>
           el.hasAttribute('role') && el.getAttribute('role') === 'main'
+          if(mutation.attributeName === 'video-id' && el.getAttribute('video-id')){
+            if (!stepOne) {
+            callHighQuality()
+            }
+          }  
         if (
           mutation.attributeName === 'hidden' ||
           mutation.attributeName === 'role'
