@@ -78,14 +78,11 @@ async function callHighQuality() {
   const hqOn = localStorage.getItem('ytme-hq')
   if (hqOn !== 'true') return
   await waitForVideo()
-  let popupMenu = document.querySelector(
-    '.ytp-popup.ytp-settings-menu'
-  ) as HTMLElement
-  if (popupMenu) popupMenu.style.opacity = '0'
   let settingsButton = document.getElementsByClassName(
     'ytp-settings-button'
-  )[0] as HTMLButtonElement
-  settingsButton.click()
+  )?.[0] as HTMLButtonElement
+  await sleep(300)
+  if (settingsButton) settingsButton.click()
 }
 function initPosition(observer?: MutationObserver) {
   observer?.disconnect()
@@ -243,7 +240,9 @@ const ytmeInitial = async (
     parentElement.addEventListener('wheel', dragZoom.onWheel)
     createButtons()
   }
-  await callHighQuality()
+  if (!stepOne) {
+    await callHighQuality()
+  }
 }
 const restoreBind = () => {
   if (dragZoom) {
@@ -262,6 +261,7 @@ async function clickQualityPanel() {
   await sleep(100)
   const panels = document.querySelector('.ytp-panel-menu')
     ?.lastChild as HTMLElement
+
   if (panels && stepOne) {
     stepOne = false
     stepTwo = true
@@ -273,28 +273,28 @@ async function clickQualityPanel() {
     if (popupMenu) popupMenu.style.opacity = ''
   }
 }
+function checkAttributes(target: Element, attr: string) {
+  return target.hasAttribute(attr)
+}
 async function clickHighQuality() {
+  stepTwo = false
   await sleep(100)
   let qualityOptions = [
     ...document.querySelectorAll('.ytp-panel-menu > .ytp-menuitem'),
   ] as HTMLElement[]
-
+  if (qualityOptions.length < 1) return
   qualityOptions = checkQuality(qualityOptions)
+
   let selection = qualityOptions[0]
-  if (selection?.attributes['aria-checked'] === undefined && stepTwo) {
-    stepTwo = false
+  if (!selection) return
+  if (selection?.attributes['aria-checked'] === undefined) {
     selection.click()
   } else {
-    stepTwo = false
     let settingsButton = document.getElementsByClassName(
       'ytp-settings-button'
     )[0] as HTMLButtonElement
     settingsButton.click()
   }
-  let popupMenu = document.querySelector(
-    '.ytp-popup.ytp-settings-menu'
-  ) as HTMLElement
-  if (popupMenu) popupMenu.style.opacity = ''
 }
 function main() {
   const config = { attributes: true, childList: true, subtree: true }
@@ -318,26 +318,46 @@ function main() {
           await clickHighQuality()
         }, 300)
       }
-      if (mutation.target.nodeName === 'YTD-APP') {
-        if (pageCheckTimeout) {
-          clearTimeout(pageCheckTimeout)
+
+      if (mutation.target.nodeName.toLowerCase() === 'ytd-watch-flexy') {
+        const el = mutation.target as Element
+        const isTheater = () =>
+          checkAttributes(el, 'theater') &&
+          checkYoutubeId(mutation.target.baseURI)
+        const isFullScreen = () =>
+          checkAttributes(el, 'fullscreen') &&
+          checkYoutubeId(mutation.target.baseURI)
+        const isHidden = () => checkAttributes(el, 'hidden')
+        const isMain = () =>
+          el.hasAttribute('role') && el.getAttribute('role') === 'main'
+        if (
+          mutation.attributeName === 'hidden' ||
+          mutation.attributeName === 'role'
+        ) {
+          if (isHidden() && !isMain()) {
+            restoreBind()
+          } else if (isTheater()) {
+            ytmeInitial(observer, target, config)
+          }
         }
-        pageCheckTimeout = setTimeout(() => {
-          if (checkYoutubeId(mutation.target.baseURI)) {
-            if (
-              document.querySelector('#player-theater-container')?.firstChild
-            ) {
-              ytmeInitial(observer, target, config)
-            }
+        if (mutation.attributeName === 'theater') {
+          if (isTheater()) {
+            ytmeInitial(observer, target, config)
           } else {
             restoreBind()
           }
-        }, 500)
+        } else if (mutation.attributeName === 'fullscreen') {
+          if (isFullScreen()) {
+            ytmeInitial(observer, target, config)
+          } else if (!isTheater()) {
+            restoreBind()
+          }
+        }
       }
       if (mutation.type === 'attributes') {
         if (
           mutation.target.nodeName === 'VIDEO' &&
-          mutation.attributeName === 'controlslist' &&
+          mutation.attributeName !== 'tabindex' &&
           checkYoutubeId(mutation.target.baseURI)
         ) {
           if (timeout) {
@@ -347,25 +367,6 @@ function main() {
             initPosition(observer)
             observer.observe(target, config)
           }, 600)
-        }
-      }
-      const dom = mutation.target as HTMLElement
-      if (mutation.type === 'childList') {
-        if (dom && dom.id === 'player-theater-container' && checkYoutubeId()) {
-          if (mutation.addedNodes.length > 0) {
-            if (mutation.previousSibling !== null) {
-              if (theaterTimeout) clearTimeout(theaterTimeout)
-              theaterTimeout = setTimeout(() => {
-                ytmeInitial(observer, target, config)
-              }, 300)
-            }
-          } else if (
-            mutation.addedNodes.length === 0 &&
-            mutation.removedNodes.length === 1 &&
-            mutation.previousSibling === null
-          ) {
-            restoreBind()
-          }
         }
       }
     })

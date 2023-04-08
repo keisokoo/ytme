@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "build:watch": "__DEV__=true vite build --watch",
-    "dev": "npm run build:hmr && (run-p wss build:watch)"
+    "dev": "npm run build:watch"
   },
   "author": "keisokoo",
   "license": "ISC",
