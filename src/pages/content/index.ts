@@ -22,9 +22,12 @@ const toHHMMSS = (secondsTime: number) => {
   let hours: number = Math.floor(sec_num / 3600)
   let minutes: number = Math.floor((sec_num - hours * 3600) / 60)
   let seconds: number = sec_num - hours * 3600 - minutes * 60
+  let mileSeconds: number = secondsTime - Math.floor(secondsTime)
   return `${hours ? String(hours).padStart(2, '0') + ':' : ''}${String(
     minutes
-  ).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  ).padStart(2, '0')}:${String(seconds).padStart(2, '0')}${
+    mileSeconds ? Math.abs(mileSeconds).toFixed(2).replace('0.', '.') : ''
+  }`
 }
 
 const checkYoutubeId = (url?: string) => {
@@ -208,10 +211,10 @@ const optionEvents = (e: Event) => {
     if (isToggle) {
       if (checkA_BY_B()) {
         RunA_BY_B = !RunA_BY_B
-        lastTarget.innerText = RunA_BY_B ? 'on' : 'off'
       } else {
         RunA_BY_B = false
       }
+      lastTarget.innerText = RunA_BY_B ? 'on' : 'off'
       if (RunA_BY_B) {
         video.addEventListener('timeupdate', onTimeUpdate)
       } else {
