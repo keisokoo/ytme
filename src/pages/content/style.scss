@@ -65,12 +65,30 @@ body[ytme] {
       height: auto;
       border-radius: 8px;
       margin-bottom: auto;
+      .ytme-column {
+        flex-direction: column;
+        gap: 0px;
+        height: 48px;
+        & > div {
+          height: 24px;
+        }
+      }
+      .ytme-row {
+        display: flex;
+        flex-direction: row;
+        gap: 0px;
+      }
       .option-item {
+        border-top: 1px solid #a2a2a285;
+        &:first-of-type {
+          border-top: none;
+        }
         padding: 0px 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 24px;
+        font-size: 12px;
         &.noPadding {
           padding: 0px;
           gap: 0px;
@@ -81,6 +99,13 @@ body[ytme] {
           border-radius: 50%;
           background-color: #6e6e6ecf;
         }
+        .ytme-group {
+          padding: 0px 16px;
+          box-sizing: border-box;
+          & > .ytme-inner-btn {
+            border-radius: 8px;
+          }
+        }
         .ytme-inner-btn {
           &.ytme-toggle-a-b {
             width: 40px;
@@ -89,16 +114,26 @@ body[ytme] {
           }
           height: 24px;
           padding: 0 8px;
-          font-size: 10px;
           min-width: 60px;
-          text-transform: uppercase;
           white-space: nowrap;
           flex: 1;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           text-align: center;
-          &:hover {
+          &:not(.noHover) {
+            font-size: 10px;
+            text-transform: uppercase;
+          }
+          &.noHover {
+            cursor: default;
+            display: flex;
+            justify-content: flex-start;
+            width: 100%;
+            padding: 0 16px;
+            box-sizing: border-box;
+          }
+          &:hover:not(.noHover) {
             color: #ad0000cf;
             background-color: #fff;
           }

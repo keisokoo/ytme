@@ -265,7 +265,10 @@ const createOptions = () => {
   const qualityOn = localStorage.getItem('ytme-hq') === 'true'
   optionsEl.innerHTML = `
   <div class="option-nav">
-  <div class="option-item noPadding" data-value="a-b"><div onclick="window.lastEvent" class="ytme-a ytme-inner-btn">A</div><div class="ytme-b ytme-inner-btn">B</div><div class="ytme-toggle-a-b ytme-inner-btn">on/off</div></div>
+  <div class="option-item noPadding ytme-column" data-value="a-b">
+    <div class="ytme-inner-btn noHover">Repeat</div>
+    <div class="ytme-row ytme-group"><div class="ytme-a ytme-inner-btn">A</div><div class="ytme-b ytme-inner-btn">B</div><div class="ytme-toggle-a-b ytme-inner-btn">on/off</div></div>
+  </div>
   <div class="option-item" data-value="rotate">Rotate: ${
     dragZoom.ts.rotate + '°'
   }</div>
@@ -297,12 +300,12 @@ const createButtons = () => {
     } else {
       optionsBtn.classList.add('active')
       const optionsEL = createOptions()
-      const controlbar = document.querySelector('.ytp-chrome-controls')
-      optionsEL.style.bottom = controlbar.clientHeight + 'px'
+      const controlBar = document.querySelector('.ytp-chrome-controls')
+      optionsEL.style.bottom = controlBar.clientHeight + 8 + 'px'
       const btnRect = optionsBtn.getBoundingClientRect()
-      optionsEL.style.left = btnRect.left + 'px'
-      const optionChilds = [...optionsEL.children]
-      optionChilds.forEach((el) => el.addEventListener('click', optionEvents))
+      optionsEL.style.left = btnRect.left - 16 + 'px'
+      const optionChild = [...optionsEL.children]
+      optionChild.forEach((el) => el.addEventListener('click', optionEvents))
       optionsBtn.prepend(optionsEL)
     }
   }
