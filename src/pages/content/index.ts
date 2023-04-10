@@ -314,6 +314,10 @@ const createButtons = () => {
   }
   restoreButton.onclick = (e) => {
     e.stopPropagation()
+    const rotateElement = document.querySelector(
+      '.option-item[data-value="rotate"]'
+    ) as HTMLElement
+    if (rotateElement) rotateElement.innerText = `Rotate: ${0 + '°'}`
     dragZoom.restore()
   }
 
@@ -464,7 +468,11 @@ function main() {
           el.hasAttribute('role') && el.getAttribute('role') === 'main'
         if (
           mutation.attributeName === 'video-id' &&
-          el.getAttribute('video-id')
+          el.getAttribute('video-id') &&
+          (document.querySelector('ytd-watch-flexy')?.hasAttribute('theater') ||
+            document
+              .querySelector('ytd-watch-flexy')
+              ?.hasAttribute('fullscreen'))
         ) {
           if (!stepOne && localStorage.getItem('ytme-hq') === 'true') {
             await callHighQuality()
