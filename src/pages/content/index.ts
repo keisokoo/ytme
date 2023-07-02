@@ -306,7 +306,7 @@ const createButtons = () => {
       optionsEL.style.left = btnRect.left - 16 + 'px'
       const optionChild = [...optionsEL.children]
       optionChild.forEach((el) => el.addEventListener('click', optionEvents))
-      optionsBtn.prepend(optionsEL)
+      optionsBtn?.prepend(optionsEL)
     }
   }
   if (hasTransformed) {
@@ -321,8 +321,8 @@ const createButtons = () => {
     dragZoom.restore()
   }
 
-  document.querySelector('.ytp-right-controls').prepend(optionsBtn)
-  document.querySelector('.ytp-right-controls').prepend(restoreButton)
+  document.querySelector('.ytp-right-controls')?.prepend(optionsBtn)
+  document.querySelector('.ytp-right-controls')?.prepend(restoreButton)
 }
 const addActiveHeader = () => {
   const Header = document.querySelector('#masthead-container') as HTMLElement
@@ -369,8 +369,18 @@ const ytmeInitial = async (
       },
     })
     const Header = document.querySelector('#masthead-container') as HTMLElement
+    window.addEventListener('blur', (e) => {
+      removeActiveHeader()
+    })
     Header.addEventListener('mouseenter', addActiveHeader)
-    currentVideo.addEventListener('mouseenter', removeActiveHeader)
+    document
+      .querySelector('.ytp-overlay')
+      ?.addEventListener('mouseenter', () => {
+        removeActiveHeader()
+      })
+    currentVideo.addEventListener('mouseenter', (e) => {
+      removeActiveHeader()
+    })
     currentVideo.addEventListener('mousedown', dragZoom.on)
     parentElement.addEventListener('wheel', dragZoom.onWheel)
     createButtons()
