@@ -4,11 +4,15 @@ body[ytme] {
   #page-manager.ytd-app {
     margin-top: 0px;
   }
-  ytd-watch-flexy[theater] #player-wide-container.ytd-watch-flexy,
-  ytd-watch-flexy[fullscreen] #player-wide-container.ytd-watch-flexy {
-    max-height: 100vh;
-    height: 100vh;
-    width: 100%;
+  ytd-watch-flexy[theater]
+    > div[id*='player-'][id*='-container'].ytd-watch-flexy,
+  ytd-watch-flexy[full-bleed-player]
+    > div[id*='player-'][id*='-container'].ytd-watch-flexy,
+  ytd-watch-flexy[fullscreen]
+    > div[id*='player-'][id*='-container'].ytd-watch-flexy {
+    max-height: 100vh !important;
+    height: 100vh !important;
+    width: 100% !important;
     video {
       top: 0px !important;
       left: 0px !important;
