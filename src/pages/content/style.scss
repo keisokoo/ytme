@@ -4,8 +4,8 @@ body[ytme] {
   #page-manager.ytd-app {
     margin-top: 0px;
   }
-  ytd-watch-flexy[theater]
-    > div[id*='player-'][id*='-container'].ytd-watch-flexy,
+  ytd-watch-flexy[theater] > div[id*='full-'][id*='-container'].ytd-watch-flexy,
+  > div[id*='player-'][id*='-container'].ytd-watch-flexy,
   ytd-watch-flexy[full-bleed-player]
     > div[id*='player-'][id*='-container'].ytd-watch-flexy,
   ytd-watch-flexy[fullscreen]
